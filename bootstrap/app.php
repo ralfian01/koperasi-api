@@ -14,8 +14,9 @@ use Symfony\Component\Translation\Exception\NotFoundResourceException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        api: __DIR__ . '/../routes/api.php',
+        // web: __DIR__ . '/../routes/web.php',
+        // api: __DIR__ . '/../routes/api.php',
+        web: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
@@ -38,12 +39,18 @@ return Application::configure(basePath: dirname(__DIR__))
                 || $exception instanceof NotFoundResourceException
             ) {
                 // Custom 404 for api
-                if ($request->is(['api', 'api/*'])) {
-                    return (new Errors)
-                        ->setInternal(false)
-                        ->setMessage(404, "Endpoint or HTTP method not available")
-                        ->sendError();
-                }
+                return (new Errors)
+                    ->setInternal(false)
+                    ->setMessage(404, "Endpoint or HTTP method not available")
+                    ->sendError();
+
+                // // Custom 404 for api
+                // if ($request->is(['api', 'api/*'])) {
+                //     return (new Errors)
+                //         ->setInternal(false)
+                //         ->setMessage(404, "Endpoint or HTTP method not available")
+                //         ->sendError();
+                // }
             }
         });
     })->create();
