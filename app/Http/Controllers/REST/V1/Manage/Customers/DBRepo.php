@@ -5,6 +5,7 @@ namespace App\Http\Controllers\REST\V1\Manage\Customers;
 use App\Http\Libraries\BaseDBRepo;
 use App\Models\Customer;
 use Exception;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class DBRepo extends BaseDBRepo
@@ -84,11 +85,49 @@ class DBRepo extends BaseDBRepo
         }
     }
 
+    public function updateData()
+    {
+        try {
+            $customerId = $this->payload['id'];
+            $customer = Customer::findOrFail($customerId);
+            $dbPayload = Arr::except($this->payload, ['id']);
+
+            return DB::transaction(function () use ($customer, $dbPayload) {
+                $customer->update($dbPayload);
+                return (object) ['status' => true];
+            });
+        } catch (Exception $e) {
+            return (object) ['status' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     /*
      * =================================================================================
      * METHOD STATIC/TOOLS
      * =================================================================================
      */
+    public static function isPhoneNumberUniqueOnUpdate(string $phone, int $businessId, int $ignoreId): bool
+    {
+        return !Customer::where('phone_number', $phone)
+            ->where('business_id', $businessId)
+            ->where('id', '!=', $ignoreId)
+            ->exists();
+    }
+
+    public static function isEmailUniqueOnUpdate(?string $email, int $businessId, int $ignoreId): bool
+    {
+        if (is_null($email)) return true;
+        return !Customer::where('email', $email)
+            ->where('business_id', $businessId)
+            ->where('id', '!=', $ignoreId)
+            ->exists();
+    }
+
+    public static function findBusinessId(int $customerId): ?int
+    {
+        return Customer::find($customerId)?->business_id;
+    }
+
     public static function isPhoneNumberUniqueInBusiness(string $phoneNumber, int $businessId): bool
     {
         return !Customer::where('phone_number', $phoneNumber)

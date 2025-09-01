@@ -45,7 +45,7 @@ Route::prefix('manage')->group(function () {
         Route::get('/', [RESTV1\Manage\CustomerCategory\Get::class, 'index']);
         Route::get('{id}', [RESTV1\Manage\CustomerCategory\Get::class, 'index']);
         Route::post('/', [RESTV1\Manage\CustomerCategory\Insert::class, 'index']);
-        // Route::put('{id}', [RESTV1\Manage\Business\Update::class, 'index']);
+        Route::put('{id}', [RESTV1\Manage\CustomerCategory\Update::class, 'index']);
         // Route::delete('{id}', [RESTV1\Manage\Business\Delete::class, 'index']);
     });
 

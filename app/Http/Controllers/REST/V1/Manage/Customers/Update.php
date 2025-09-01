@@ -1,41 +1,28 @@
 <?php
 
-namespace App\Http\Controllers\REST\V1\Manage\Business;
+namespace App\Http\Controllers\REST\V1\Manage\Customers;
 
 use App\Http\Controllers\REST\BaseREST;
 use App\Http\Controllers\REST\Errors;
 
 class Update extends BaseREST
 {
-    public function __construct(
-        ?array $payload = [],
-        ?array $file = [],
-        ?array $auth = [],
-    ) {
+    public function __construct(?array $payload = [], ?array $file = [], ?array $auth = [])
+    {
         $this->payload = $payload;
         $this->file = $file;
         $this->auth = $auth;
         return $this;
     }
 
-    /**
-     * @var array Property that contains the payload rules.
-     * Aturan 'required' dihapus dari field body agar klien bisa mengirim update parsial.
-     */
     protected $payloadRules = [
-        // Validasi untuk parameter dari URI (tetap required)
-        'id' => 'required|integer|exists:business,id',
-
-        // Validasi untuk data dari body request (opsional)
-        'name' => 'string|max:100', // 'required' dihapus
+        'id' => 'required|integer|exists:customers,id',
+        'business_id' => 'integer|exists:business,id',
+        'customer_category_id' => 'nullable|integer|exists:customer_categories,id',
+        'name' => 'string|max:100',
+        'phone_number' => 'string|max:255',
         'email' => 'nullable|email',
-        'contact' => 'nullable|string|max:255',
-        'description' => 'nullable|string',
-        'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'website' => 'nullable|string',
-        'instagram' => 'nullable|string',
-        'tiktok' => 'nullable|string',
-        'is_active' => 'nullable|boolean',
+        'address' => 'nullable|string',
     ];
 
     protected $privilegeRules = [];
@@ -45,34 +32,23 @@ class Update extends BaseREST
         return $this->nextValidation();
     }
 
-    /**
-     * Handle the next step of payload validation.
-     * @return void
-     */
     private function nextValidation()
     {
-        // --- PERUBAHAN KRUSIAL DI SINI ---
-        // Hanya lakukan validasi unik jika field 'email' dikirim oleh klien.
-        if (array_key_exists('email', $this->payload)) {
-            // Panggil DBRepo untuk melakukan pengecekan unik secara manual
-            if (!DBRepo::isEmailUniqueOnUpdate($this->payload['email'], $this->payload['id'])) {
-                return $this->error(
-                    (new Errors)
-                        ->setMessage(409, 'The email has already been taken.')
-                        ->setReportId('MBU1')
-                );
+        $businessId = $this->payload['business_id'] ?? DBRepo::findBusinessId($this->payload['id']);
+
+        if (array_key_exists('phone_number', $this->payload)) {
+            if (!DBRepo::isPhoneNumberUniqueOnUpdate($this->payload['phone_number'], $businessId, $this->payload['id'])) {
+                return $this->error((new Errors)->setMessage(409, 'The phone number has already been taken.'));
             }
         }
-        // ------------------------------------
-
-        // Jika tidak ada masalah, lanjutkan ke proses update
+        if (array_key_exists('email', $this->payload)) {
+            if (!DBRepo::isEmailUniqueOnUpdate($this->payload['email'], $businessId, $this->payload['id'])) {
+                return $this->error((new Errors)->setMessage(409, 'The email has already been taken.'));
+            }
+        }
         return $this->update();
     }
 
-    /** 
-     * Function to update data 
-     * @return object
-     */
     public function update()
     {
         $dbRepo = new DBRepo($this->payload, $this->file, $this->auth);
@@ -81,7 +57,6 @@ class Update extends BaseREST
         if ($update->status) {
             return $this->respond(200);
         }
-
         return $this->error(500, ['reason' => $update->message]);
     }
 }

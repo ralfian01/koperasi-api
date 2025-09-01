@@ -5,7 +5,9 @@ namespace App\Http\Controllers\REST\V1\Manage\CustomerCategory;
 use App\Http\Libraries\BaseDBRepo;
 use App\Models\CustomerCategory;
 use Exception;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+
 
 class DBRepo extends BaseDBRepo
 {
@@ -71,6 +73,22 @@ class DBRepo extends BaseDBRepo
         }
     }
 
+    public function updateData()
+    {
+        try {
+            $categoryId = $this->payload['id'];
+            $category = CustomerCategory::findOrFail($categoryId);
+            $dbPayload = Arr::except($this->payload, ['id']);
+
+            return DB::transaction(function () use ($category, $dbPayload) {
+                $category->update($dbPayload);
+                return (object) ['status' => true];
+            });
+        } catch (Exception $e) {
+            return (object) ['status' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     /*
      * =================================================================================
      * METHOD STATIC/TOOLS
@@ -81,5 +99,18 @@ class DBRepo extends BaseDBRepo
         return !CustomerCategory::where('name', $name)
             ->where('business_id', $businessId)
             ->exists();
+    }
+
+    public static function isNameUniqueOnUpdate(string $name, int $businessId, int $ignoreId): bool
+    {
+        return !CustomerCategory::where('name', $name)
+            ->where('business_id', $businessId)
+            ->where('id', '!=', $ignoreId)
+            ->exists();
+    }
+
+    public static function findBusinessId(int $categoryId): ?int
+    {
+        return CustomerCategory::find($categoryId)?->business_id;
     }
 }

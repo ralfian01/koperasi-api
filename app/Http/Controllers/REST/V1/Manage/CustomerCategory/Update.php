@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\REST\V1\Manage\Business;
+namespace App\Http\Controllers\REST\V1\Manage\CustomerCategory;
 
 use App\Http\Controllers\REST\BaseREST;
 use App\Http\Controllers\REST\Errors;
@@ -18,24 +18,11 @@ class Update extends BaseREST
         return $this;
     }
 
-    /**
-     * @var array Property that contains the payload rules.
-     * Aturan 'required' dihapus dari field body agar klien bisa mengirim update parsial.
-     */
     protected $payloadRules = [
-        // Validasi untuk parameter dari URI (tetap required)
-        'id' => 'required|integer|exists:business,id',
-
-        // Validasi untuk data dari body request (opsional)
-        'name' => 'string|max:100', // 'required' dihapus
-        'email' => 'nullable|email',
-        'contact' => 'nullable|string|max:255',
+        'id' => 'required|integer|exists:customer_categories,id',
+        'business_id' => 'integer|exists:business,id', // Opsional, jika ingin memindahkan kategori
+        'name' => 'string|max:100', // Opsional
         'description' => 'nullable|string',
-        'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'website' => 'nullable|string',
-        'instagram' => 'nullable|string',
-        'tiktok' => 'nullable|string',
-        'is_active' => 'nullable|boolean',
     ];
 
     protected $privilegeRules = [];
@@ -45,34 +32,20 @@ class Update extends BaseREST
         return $this->nextValidation();
     }
 
-    /**
-     * Handle the next step of payload validation.
-     * @return void
-     */
     private function nextValidation()
     {
-        // --- PERUBAHAN KRUSIAL DI SINI ---
-        // Hanya lakukan validasi unik jika field 'email' dikirim oleh klien.
-        if (array_key_exists('email', $this->payload)) {
-            // Panggil DBRepo untuk melakukan pengecekan unik secara manual
-            if (!DBRepo::isEmailUniqueOnUpdate($this->payload['email'], $this->payload['id'])) {
-                return $this->error(
-                    (new Errors)
-                        ->setMessage(409, 'The email has already been taken.')
-                        ->setReportId('MBU1')
-                );
+        // Hanya validasi unik jika 'name' ada di payload
+        if (array_key_exists('name', $this->payload)) {
+            // Kita butuh business_id untuk scope. Jika tidak dikirim, gunakan business_id yang ada.
+            $businessId = $this->payload['business_id'] ?? DBRepo::findBusinessId($this->payload['id']);
+
+            if (!DBRepo::isNameUniqueOnUpdate($this->payload['name'], $businessId, $this->payload['id'])) {
+                return $this->error((new Errors)->setMessage(409, 'The category name has already been taken for this business.'));
             }
         }
-        // ------------------------------------
-
-        // Jika tidak ada masalah, lanjutkan ke proses update
         return $this->update();
     }
 
-    /** 
-     * Function to update data 
-     * @return object
-     */
     public function update()
     {
         $dbRepo = new DBRepo($this->payload, $this->file, $this->auth);
@@ -81,7 +54,6 @@ class Update extends BaseREST
         if ($update->status) {
             return $this->respond(200);
         }
-
         return $this->error(500, ['reason' => $update->message]);
     }
 }
