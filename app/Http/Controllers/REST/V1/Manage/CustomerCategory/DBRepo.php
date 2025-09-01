@@ -89,6 +89,30 @@ class DBRepo extends BaseDBRepo
         }
     }
 
+    /**
+     * Fungsi utama untuk menghapus data kategori customer.
+     * @return object
+     */
+    public function deleteData()
+    {
+        try {
+            $categoryId = $this->payload['id'];
+            $category = CustomerCategory::findOrFail($categoryId);
+
+            // onDelete('set null') pada migrasi customers akan menangani customer terkait.
+            // Saat kategori dihapus, customer yang ada di dalamnya akan memiliki
+            // customer_category_id menjadi NULL.
+            $category->delete();
+
+            return (object) ['status' => true];
+        } catch (Exception $e) {
+            return (object) [
+                'status' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
     /*
      * =================================================================================
      * METHOD STATIC/TOOLS

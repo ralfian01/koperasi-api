@@ -37,8 +37,8 @@ Route::prefix('manage')->group(function () {
         Route::get('/', [RESTV1\Manage\Customers\Get::class, 'index']);
         Route::get('{id}', [RESTV1\Manage\Customers\Get::class, 'index']);
         Route::post('/', [RESTV1\Manage\Customers\Insert::class, 'index']);
-        // Route::put('{id}', [RESTV1\Manage\Business\Update::class, 'index']);
-        // Route::delete('{id}', [RESTV1\Manage\Business\Delete::class, 'index']);
+        Route::put('{id}', [RESTV1\Manage\Customers\Update::class, 'index']);
+        Route::delete('{id}', [RESTV1\Manage\Customers\Delete::class, 'index']);
     });
 
     Route::prefix('customer-category')->group(function () {
@@ -46,7 +46,7 @@ Route::prefix('manage')->group(function () {
         Route::get('{id}', [RESTV1\Manage\CustomerCategory\Get::class, 'index']);
         Route::post('/', [RESTV1\Manage\CustomerCategory\Insert::class, 'index']);
         Route::put('{id}', [RESTV1\Manage\CustomerCategory\Update::class, 'index']);
-        // Route::delete('{id}', [RESTV1\Manage\Business\Delete::class, 'index']);
+        Route::delete('{id}', [RESTV1\Manage\CustomerCategory\Delete::class, 'index']);
     });
 
     Route::prefix('outlets')->group(function () {

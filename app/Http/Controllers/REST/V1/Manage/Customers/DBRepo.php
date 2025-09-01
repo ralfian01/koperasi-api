@@ -101,6 +101,30 @@ class DBRepo extends BaseDBRepo
         }
     }
 
+    /**
+     * Fungsi utama untuk menghapus data customer.
+     * @return object
+     */
+    public function deleteData()
+    {
+        try {
+            $customerId = $this->payload['id'];
+            $customer = Customer::findOrFail($customerId);
+
+            // onDelete('set null') pada migrasi transactions akan menangani transaksi terkait.
+            // Saat customer dihapus, histori transaksi tidak akan hilang,
+            // hanya kolom `customer_id` di transaksi tersebut yang akan menjadi NULL.
+            $customer->delete();
+
+            return (object) ['status' => true];
+        } catch (Exception $e) {
+            return (object) [
+                'status' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
     /*
      * =================================================================================
      * METHOD STATIC/TOOLS
