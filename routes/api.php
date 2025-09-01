@@ -53,8 +53,8 @@ Route::prefix('manage')->group(function () {
         Route::get('/', [RESTV1\Manage\Outlets\Get::class, 'index']);
         Route::get('{id}', [RESTV1\Manage\Outlets\Get::class, 'index']);
         Route::post('/', [RESTV1\Manage\Outlets\Insert::class, 'index']);
-        // Route::put('{id}', [RESTV1\Manage\Position\Update::class, 'index']);
-        // Route::delete('{id}', [RESTV1\Manage\Position\Delete::class, 'index']);
+        Route::put('{id}', [RESTV1\Manage\Outlets\Update::class, 'index']);
+        Route::delete('{id}', [RESTV1\Manage\Outlets\Delete::class, 'index']);
     });
 
     Route::prefix('categories')->group(function () {
