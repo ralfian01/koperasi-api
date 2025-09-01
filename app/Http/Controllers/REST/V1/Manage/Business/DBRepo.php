@@ -5,10 +5,38 @@ namespace App\Http\Controllers\REST\V1\Manage\Business;
 use App\Http\Libraries\BaseDBRepo;
 use App\Models\Business;
 use Exception;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class DBRepo extends BaseDBRepo
 {
+
+    /*
+     * =================================================================================
+     * METHOD STATIC/TOOLS
+     * =================================================================================
+     */
+
+    /**
+     * Memeriksa apakah email unik saat proses update.
+     * Mengabaikan record dengan ID yang sedang diedit.
+     * @param string|null $email
+     * @param int $ignoreId ID dari record yang akan diabaikan
+     * @return bool
+     */
+    public static function isEmailUniqueOnUpdate(?string $email, int $ignoreId): bool
+    {
+        // Jika email tidak diberikan (nullable), anggap valid
+        if (is_null($email)) {
+            return true;
+        }
+
+        // Cari record lain yang memiliki email yang sama, KECUALI record yang sedang kita edit
+        return !Business::where('email', $email)
+            ->where('id', '!=', $ignoreId)
+            ->exists();
+    }
 
     public function getData()
     {
@@ -37,8 +65,31 @@ class DBRepo extends BaseDBRepo
     public function insertData()
     {
         try {
-            return DB::transaction(function () {
-                $business = Business::create($this->payload);
+            $dbPayload = $this->payload;
+
+            // --- PERUBAHAN KRUSIAL DI SINI ---
+
+            // 1. Dapatkan file langsung dari helper request() Laravel
+            // Ini menjamin kita mendapatkan objek Illuminate\Http\UploadedFile
+            $logoFile = request()->file('logo');
+
+            // 2. Proses Upload File (jika ada dan valid)
+            if ($logoFile && $logoFile->isValid()) {
+
+                // Buat nama file yang unik
+                $fileName = 'logo_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+
+                // Simpan file menggunakan method storeAs() yang sekarang sudah dikenali
+                $path = $logoFile->storeAs('logos', $fileName, 'public');
+
+                // 3. Tambahkan path file ke payload yang akan disimpan ke DB
+                $dbPayload['logo'] = $path;
+            }
+            // ------------------------------------
+
+            return DB::transaction(function () use ($dbPayload) {
+                // 4. Buat record di database dengan payload yang sudah diperbarui
+                $business = Business::create($dbPayload);
 
                 if (!$business) {
                     throw new Exception("Failed to create a new business unit.");
@@ -48,6 +99,40 @@ class DBRepo extends BaseDBRepo
                     'status' => true,
                     'data' => (object) ['id' => $business->id]
                 ];
+            });
+        } catch (Exception $e) {
+            return (object) [
+                'status' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Fungsi utama untuk memperbarui data bisnis.
+     * @return object
+     */
+    public function updateData()
+    {
+        try {
+            $businessId = $this->payload['id'];
+            $business = Business::findOrFail($businessId);
+
+            $dbPayload = Arr::except($this->payload, ['id']);
+
+            $logoFile = request()->file('logo');
+            if ($logoFile && $logoFile->isValid()) {
+                if ($business->logo) {
+                    Storage::disk('public')->delete($business->logo);
+                }
+                $fileName = 'logo_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+                $path = $logoFile->storeAs('logos', $fileName, 'public');
+                $dbPayload['logo'] = $path;
+            }
+
+            return DB::transaction(function () use ($business, $dbPayload) {
+                $business->update($dbPayload);
+                return (object) ['status' => true];
             });
         } catch (Exception $e) {
             return (object) [

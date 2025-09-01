@@ -9,7 +9,7 @@ class Insert extends BaseREST
 {
     public function __construct(
         ?array $payload = [],
-        ?array $file = [],
+        ?array $file = [], // File yang di-upload akan masuk ke sini
         ?array $auth = [],
     ) {
         $this->payload = $payload;
@@ -26,7 +26,13 @@ class Insert extends BaseREST
         'email' => 'nullable|email|unique:business,email',
         'contact' => 'nullable|string|max:255',
         'description' => 'nullable|string',
-        'logo' => 'nullable|string',
+
+        // --- PERUBAHAN DI SINI ---
+        // 'logo' sekarang divalidasi sebagai file gambar
+        // Batasan: harus gambar, tipe jpeg/png/jpg/gif, ukuran maks 2MB (2048 KB)
+        'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        // ------------------------
+
         'website' => 'nullable|string',
         'instagram' => 'nullable|string',
         'tiktok' => 'nullable|string',
@@ -42,13 +48,12 @@ class Insert extends BaseREST
 
     private function nextValidation()
     {
-        // Validasi 'unique:email' sudah ditangani oleh $payloadRules,
-        // jadi bisa langsung lanjut ke proses insert.
         return $this->insert();
     }
 
     public function insert()
     {
+        // Perhatikan bahwa $this->file sekarang di-pass ke DBRepo
         $dbRepo = new DBRepo($this->payload, $this->file, $this->auth);
         $insert = $dbRepo->insertData();
 

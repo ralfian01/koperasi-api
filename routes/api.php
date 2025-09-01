@@ -26,10 +26,11 @@ Route::prefix('manage')->group(function () {
 
     Route::prefix('business')->group(function () {
         Route::get('/', [RESTV1\Manage\Business\Get::class, 'index']);
+        Route::get('summary', [RESTV1\Manage\Business\Summary\Get::class, 'index']);
         Route::get('{id}', [RESTV1\Manage\Business\Get::class, 'index']);
         Route::post('/', [RESTV1\Manage\Business\Insert::class, 'index']);
-        // Route::put('{id}', [RESTV1\Manage\Position\Update::class, 'index']);
-        // Route::delete('{id}', [RESTV1\Manage\Position\Delete::class, 'index']);
+        Route::put('{id}', [RESTV1\Manage\Business\Update::class, 'index']);
+        // Route::delete('{id}', [RESTV1\Manage\Business\Delete::class, 'index']);
     });
 
     Route::prefix('outlets')->group(function () {
