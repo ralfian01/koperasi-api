@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\REST\V1\Manage\Product;
+namespace App\Http\Controllers\REST\V1\Manage\Business;
 
 use App\Http\Controllers\REST\BaseREST;
 use App\Http\Controllers\REST\Errors;
@@ -12,7 +12,6 @@ class Delete extends BaseREST
         ?array $file = [],
         ?array $auth = [],
     ) {
-
         $this->payload = $payload;
         $this->file = $file;
         $this->auth = $auth;
@@ -20,44 +19,23 @@ class Delete extends BaseREST
     }
 
     /**
-     * @var array Property that contains the payload rules
+     * @var array Property that contains the payload rules.
+     * Kita hanya perlu memvalidasi parameter 'id' dari URI.
      */
-    protected $payloadRules = [];
-
-    /**
-     * @var array Property that contains the privilege data
-     */
-    protected $privilegeRules = [
-        'PRODUCT_MANAGE_ADD',
+    protected $payloadRules = [
+        'id' => 'required|integer|exists:business,id',
     ];
 
+    protected $privilegeRules = [];
 
-    /**
-     * The method that starts the main activity
-     * @return null
-     */
     protected function mainActivity()
     {
         return $this->nextValidation();
     }
 
-    /**
-     * Handle the next step of payload validation
-     * @return void
-     */
     private function nextValidation()
     {
-        $dbRepo = new DBRepo($this->payload, $this->file, $this->auth);
-
-        // Make sure product id is available
-        if (!DBRepo::checkProductId($this->payload['id'])) {
-            return $this->error(
-                (new Errors)
-                    ->setMessage(404, 'Product id not found')
-                    ->setReportId('MPD1')
-            );
-        }
-
+        // Aturan 'exists' sudah memastikan ID valid, jadi kita bisa langsung lanjut.
         return $this->delete();
     }
 
@@ -68,15 +46,14 @@ class Delete extends BaseREST
     public function delete()
     {
         $dbRepo = new DBRepo($this->payload, $this->file, $this->auth);
-
         $delete = $dbRepo->deleteData();
 
         if ($delete->status) {
+            // HTTP 200 OK atau 204 No Content adalah respons yang baik untuk delete.
+            // Kita gunakan 200 untuk konsistensi.
             return $this->respond(200);
         }
 
-        return $this->error(500, [
-            'reason' => $delete->message
-        ]);
+        return $this->error(500, ['reason' => $delete->message]);
     }
 }

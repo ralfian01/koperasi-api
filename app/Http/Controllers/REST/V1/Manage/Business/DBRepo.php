@@ -141,4 +141,37 @@ class DBRepo extends BaseDBRepo
             ];
         }
     }
+
+    /**
+     * Fungsi utama untuk menghapus data bisnis.
+     * @return object
+     */
+    public function deleteData()
+    {
+        try {
+            // 1. Ambil ID dari payload dan cari data bisnis
+            $businessId = $this->payload['id'];
+            $business = Business::findOrFail($businessId);
+
+            // 2. Simpan path logo untuk dihapus nanti
+            $logoPath = $business->logo;
+
+            // 3. Hapus record dari database
+            // onDelete('cascade') pada migrasi akan menangani penghapusan data terkait
+            // seperti outlets, products, dll. secara otomatis.
+            $business->delete();
+
+            // 4. Hapus file logo dari storage JIKA record DB berhasil dihapus
+            if ($logoPath) {
+                Storage::disk('public')->delete($logoPath);
+            }
+
+            return (object) ['status' => true];
+        } catch (Exception $e) {
+            return (object) [
+                'status' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
 }
