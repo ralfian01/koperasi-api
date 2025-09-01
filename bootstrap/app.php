@@ -14,11 +14,11 @@ use Symfony\Component\Translation\Exception\NotFoundResourceException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: env('APP_ENV') == 'local' ? __DIR__ . '/../routes/web.php' : "",
         api: [
             'prefix' => env('APP_ENV') == 'local' ? 'api' : '',
             'path' => __DIR__ . '/../routes/api.php'
         ],
+        web: __DIR__ . '/../routes/web.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
