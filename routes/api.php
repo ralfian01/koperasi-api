@@ -57,6 +57,14 @@ Route::prefix('manage')->group(function () {
         Route::delete('{id}', [RESTV1\Manage\Outlets\Delete::class, 'index']);
     });
 
+    Route::prefix('taxes')->group(function () {
+        Route::get('/', [RESTV1\Manage\Taxes\Get::class, 'index']);
+        Route::get('{id}', [RESTV1\Manage\Taxes\Get::class, 'index']);
+        Route::post('/', [RESTV1\Manage\Taxes\Insert::class, 'index']);
+        Route::put('{id}', [RESTV1\Manage\Taxes\Update::class, 'index']);
+        Route::delete('{id}', [RESTV1\Manage\Taxes\Delete::class, 'index']);
+    });
+
     Route::prefix('categories')->group(function () {
         Route::get('/', [RESTV1\Manage\Categories\Get::class, 'index']);
         Route::get('{id}', [RESTV1\Manage\Categories\Get::class, 'index']);
