@@ -16,19 +16,15 @@ class CustomerSeeder extends Seeder
         $customer = [
             [
                 'business_id' => 1,
-                'name' => 'Sewa Harian',
+                'customer_category_id' => 1,
+                'name' => 'Ahmad',
+                'phone_number' => '081234356789',
             ],
             [
                 'business_id' => 1,
-                'name' => 'Sewa Per Jam',
-            ],
-            [
-                'business_id' => 2,
-                'name' => 'Driving Range',
-            ],
-            [
-                'business_id' => 2,
-                'name' => 'Driving Range',
+                'customer_category_id' => 2,
+                'name' => 'Iman',
+                'phone_number' => '081234356780',
             ],
         ];
 
@@ -36,7 +32,9 @@ class CustomerSeeder extends Seeder
             Customer::updateOrCreate(
                 [
                     'business_id' => $member['business_id'],
+                    'customer_category_id' => $member['customer_category_id'],
                     'name' => $member['name'],
+                    'phone_number' => $member['phone_number'],
                 ],
                 $member
             );

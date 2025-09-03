@@ -16,19 +16,19 @@ class CustomerCategorySeeder extends Seeder
         $customer = [
             [
                 'business_id' => 1,
-                'name' => 'Sewa Harian',
+                'name' => 'Umum',
             ],
             [
                 'business_id' => 1,
-                'name' => 'Sewa Per Jam',
+                'name' => 'VVIP',
             ],
             [
                 'business_id' => 2,
-                'name' => 'Driving Range',
+                'name' => 'Umum',
             ],
             [
                 'business_id' => 2,
-                'name' => 'Driving Range',
+                'name' => 'VVIP',
             ],
         ];
 
