@@ -22,7 +22,7 @@ class MemberSeeder extends Seeder
             ],
             [
                 'member_code' => 'KOP-003',
-                'name' => 'Koperasi Simpan Pinjam Abadi',
+                'name' => 'Koperasi Simpan Pinjam',
                 'is_active' => false,
             ],
         ];

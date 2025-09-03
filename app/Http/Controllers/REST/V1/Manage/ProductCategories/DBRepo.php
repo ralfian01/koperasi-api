@@ -15,7 +15,10 @@ class DBRepo extends BaseDBRepo
         try {
             $query = ProductCategory::query()
                 ->withCount('products')
-                ->with(['business' => fn($q) => $q->select('id', 'name'), 'outlet' => fn($q) => $q->select('id', 'name')]);
+                ->with([
+                    'business' => fn($q) => $q->select('id', 'name'),
+                    'outlet' => fn($q) => $q->select('id', 'name')
+                ]);
 
             if (isset($this->payload['id'])) {
                 $data = $query->find($this->payload['id']);
